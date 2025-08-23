@@ -31,25 +31,63 @@ Typical desktops put many layers between apps and pixels, which is great for fea
 
 ```mermaid
 flowchart LR
+  comp["compositord (Vulkan + KMS)"];
+
   subgraph Apps
-    A1[Vulkan apps] -- DMABUF --> COMP
-    A2[Tools/CLI] -- JSON over UDS --> COMP
-    A3[ARexx-Next] -- JSON --> COMP
+    a1["Vulkan apps"];
+    a2["Tools / CLI"];
+    a3["ARexx-Next"];
   end
 
   subgraph Services
-    COP[copperd\n(timeline)] -- reg writes --> COMP[compositord\n(Vulkan + KMS)]
-    B[blitterd\n(2D ops)] -- writes --> COMP
+    cop["copperd (timeline)"];
+    blt["blitterd (2D ops)"];
   end
 
-  subgraph Kernel/Drivers
-    DRM[DRM/KMS] --> COMP
-    ALSA[ALSA] -.->|optional| COMP
+  subgraph Kernel_and_Drivers
+    drm["DRM / KMS"];
+    alsa["ALSA (optional)"];
   end
 
-  COMP -- vsync ticks --> COP
-  COMP -- events --> Apps
+  a1 --> comp;
+  a2 --> comp;
+  a3 --> comp;
+
+  cop --> comp;
+  blt --> comp;
+
+  drm --> comp;
+  alsa -.-> comp;
+
+  comp --> cop;
+  comp --> a1;
+  comp --> a2;
+  comp --> a3;
 ```
+
+<details>
+<summary>Text-only fallback (if Mermaid fails)</summary>
+
+```
+Apps (Vulkan, Tools, ARexx) -> compositord
+Services (copperd, blitterd) -> compositord
+Kernel/Drivers (DRM/KMS, ALSA optional) -> compositord
+compositord -> copperd (vsync ticks)
+compositord -> Apps (events)
+```
+</details>
+
+<details>
+<summary>Text-only fallback (if Mermaid fails)</summary>
+
+```
+Apps (Vulkan, Tools, ARexx) -> compositord
+Services (copperd, blitterd) -> compositord
+Kernel/Drivers (DRM/KMS, ALSA optional) -> compositord
+compositord -> copperd (vsync ticks)
+compositord -> Apps (events)
+```
+</details>
 
 - **DMABUF import** for client buffers (apps, blitterd).  
 - **Layer register model** the rest of the system writes to.  
